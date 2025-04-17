@@ -64,10 +64,16 @@ class TableFieldsGenerator
         $this->tableName = $tableName;
         $this->ignoredFields = $ignoredFields;
 
-        if (!empty($connection)) {
-            $this->schemaManager = DB::connection($connection)->getDoctrineSchemaManager();
+        $connectionInstance = DB::connection($connection ?: null);
+
+        if (method_exists($connectionInstance, 'getDoctrineConnection')) {
+            // Laravel 11+ preferred method
+            $this->schemaManager = $connectionInstance
+                ->getDoctrineConnection()
+                ->createSchemaManager();
         } else {
-            $this->schemaManager = DB::getDoctrineSchemaManager();
+            // Laravel <11 fallback (optional)
+            $this->schemaManager = $connectionInstance->getDoctrineSchemaManager();
         }
 
         $platform = $this->schemaManager->getDatabasePlatform();
